@@ -3,17 +3,27 @@
 Connect-PnPOnline -Url https://devonepoint.sharepoint.com/sites/FIRSTSTEP -Interactive
 
 #Récupère la liste dont inner name/Title = "books" et nom public = "Albums")
-$Lists = Get-PnPList
-$Albums = $Lists | Where-Object {$_.Title -eq "books"}
+$Albums = Get-PnPList -Identity "books"
 Start-App
 
 
 function Start-App
 {
-Get-AlbumTitle
-Select-AlbumStyle
-Select-Artist
-Add-NewAlbum
+$newCD = @{}
+$newCD.Add("Title", $null)
+$newCD.Add("Style", $null)
+$newCD.Add("ArtistId", $null)
+$newCD.Add("Stock", $null)
+$newCD.Add("AlbumRelease", $null)
+#$newCD.Add("price", $null)
+
+$newCD.Title = Get-AlbumTitle
+$newCD.Style = Select-AlbumStyle
+$newCD.ArtistId = Select-Artist
+$newCD.Stock = [int](Read-Host "Veuillez renseigner le stock actuel")
+$newCD.AlbumRelease = (Read-Host "Veuillez renseigner la date de sortie de l'album (format:MM/JJ/YYYY)")
+
+Add-NewAlbum -List $Albums -NewAlbum $newCD
 Show-UpdatedAlbumList
 #Show-NewAlbum
 }
@@ -21,8 +31,7 @@ Show-UpdatedAlbumList
 
 function Get-AlbumTitle
 {
-    $newAlbum = Read-Host "Quel album souhaitez vous ajouter?"
-    return $newAlbum 
+    return Read-Host "Quel album souhaitez vous ajouter?"
 }
 
 
@@ -48,54 +57,34 @@ function Select-AlbumStyle
        6 {$choice = "classical"}
        7 {$choice = "metal"}
     }
-    Write-Host "Vous avez choisi:"
-    Write-Host $albumStyle
-    return $albumStyle
+    Write-Host "Vous avez choisi: $($choice)"
+    return $choice
 }
 
 function Select-Artist
 {
-    Write-Host "1) Pixies"
-    Write-Host "2) Radiohead"
-    Write-Host "3) Balthazar"
-    Write-Host "4) Metronomy"
-    Write-Host "5) The Strokes"
-    Write-Host "6) Orchestre National de Lyon"
-    Write-Host "7) Nine Inch Nails"
-    Write-Host "8) Beirut"
-    Write-Host "9) Tame Impala"
-
+    $Artists = Get-PnPList -Identity "Artists"
+    $ArtistItems = Get-PnPListItem -List $Artists
+    $ArtistItems | ForEach-Object {Write-Host "$($_.Id)) $($_["Title"])"}
+    
     $albumArtist = Read-Host "sélectionnez un artiste: 1-9"
 
-    Switch ($albumArtist)
-    {
-        1 {$albumArtist = "1"}
-        2 {$albumArtist = "2"}
-        3 {$albumArtist = "3"}
-        4 {$albumArtist = "4"}
-        5 {$albumArtist = "5"}
-        6 {$albumArtist = "6"}
-        7 {$albumArtist = "7"}
-        8 {$albumArtist = "8"}
-        9 {$albumArtist = "9"}
-    }
-    Write-Host "Vous avez choisi:"
-     Write-Host $albumArtist
+    #Si mon chiffre est supérieur à 9 alors récursif sinon c'est que c'est bon
+    
+    Write-Host "Vous avez choisi: $($albumArtist)"
     return $albumArtist
 }
 
 function Add-NewAlbum
 {
-    Add-PnPListItem -List $Albums -Values @{"Title" = $newAlbum;"style" = $albumStyle;"artist" = $albumArtist}
+    Param(
+        $List,
+        $NewAlbum
+    )
+    Add-PnPListItem -List "books" -Values @{"Title" = $NewAlbum.Title;"artist" = $NewAlbum.ArtistId;"style" = $NewAlbum.Style;"stock" = $newCD.Stock;"dateOfRelease" = $NewAlbum.AlbumRelease}
 }
 
 function Show-UpdatedAlbumList
 {
-Get-PnPListItem -List $Albums
+    Get-PnPListItem -List $Albums
 }
-
-#function Show-NewAlbum
-#{
-#Récupère la valeur du champ/colonne "Title" du premier élt de la liste
-#(Get-PnPListItem -List books -Id 1 -Fields "Title").FieldValues
-#}

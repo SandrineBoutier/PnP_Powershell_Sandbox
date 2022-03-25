@@ -39,21 +39,26 @@ Get-PnPField -List $Albums -Identity "artist"
 Get-PnPField -List $Albums
 
 
-Add-PnPListItem -List books -Values @{"Title" = "Currents"}
-Set-PnPListItem -List books -Identity 3 -Values @{"Title" = "Room on fire"}
+Add-PnPListItem -List books -Values @{"Title" = "Rats";"style" = "rock";"artist" = "3"}
+Set-PnPListItem -List books -Identity 3 -Values @{"Title" = "Rats"}
 Set-PnPListItem -List books -Identity 3 -Values @{"style" = "rock"}
-Set-PnPListItem -List books -Identity 3 -Values @{"artist" = "5"}
+Set-PnPListItem -List books -Identity 3 -Values @{"artist" = "3"}
 
+Remove-PnPListItem -List books -Identity 9 -Force
+Get-PnPListItem -List $Albums
 
 Get-PnPListItem -List Artists
 
 
 
 #tous les éléments de la liste
-$Album = Get-PnPListItem -List $Albums
+$Album = Get-PnPListItem -List books
 
 #Récupère 
 $Albums | %{Write-Host $_.Title}
 $Lists | ForEach-Object {Write-Host $_.Title}
 $Booking = $Lists | Where-Object {$_.Title -eq "Booking"}
 
+
+$Lists = Get-PnPList
+$Lists | Where-Object {$_.Title -eq "books"}
